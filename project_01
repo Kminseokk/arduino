@@ -1,0 +1,71 @@
+#include<IRremote.h>
+
+
+int remote = 6;
+IRrecv ir(remote); //ir센서가(출력) 연결된 곳
+int piezo = 13;
+decode_results results;
+
+void setup()
+{
+  ir.enableIRIn(); //적외선센서활성
+  pinMode(2, OUTPUT);
+  pinMode(3, INPUT);
+  pinMode(piezo, OUTPUT);
+  //pinMode(remote, INPUT);
+  //Serial.begin(4800);
+
+}
+
+void loop()
+{
+  if(ir.decode(&results)){
+    Serial.println(results.value, HEX);
+    if(results.value == 0xFD30CF) { //리모컨 0번
+  		analogWrite(11, 0); //led빨
+  		analogWrite(10, 0); //led파
+  		analogWrite(9, 0);  //led초
+  		analogWrite(13, 0); //피에조
+  
+  
+  		digitalWrite(2, HIGH);
+  		delayMicroseconds(10);
+  		digitalWrite(2, LOW);
+  
+  		long duration = pulseIn(3, HIGH);
+  
+  		if (duration == 0) {
+  		  return;
+  		}
+  
+ 		 long distance = duration / 58.2;
+ 		 int hertz = map(duration, 0, 1023, 20, 4000);
+  		//저항값과 부저의 주파수의 범위가 달라서, 가변저항의 값인 0~1023
+  		//부저의 주파수값인 20~4000을 매핑시키는 함수.
+  		//0~1023인 가변저항값이랑 20~4000의 부저값을 매핑시킨다는 의미.
+     
+
+  		if (distance < 50) {
+    	 analogWrite(11, 255);
+   		 delayMicroseconds(2);
+         digitalWrite(piezo, HIGH);
+   		 //tone(13, hertz, 100);
+		   
+ 		 } else if (distance < 100) {
+  		  analogWrite(10, 255);
+  		  delayMicroseconds(2);
+          digitalWrite(piezo, HIGH);
+    	  //tone(13, hertz, 100);
+
+ 		 } else if (distance < 200) {
+    	  analogWrite(9, 255);
+      	  delayMicroseconds(2);
+ 		 }
+    }else{
+      Serial.println(results.value, HEX);
+      Serial.println("예외");      
+    }
+    delayMicroseconds(2);
+    ir.resume();
+  }
+}
