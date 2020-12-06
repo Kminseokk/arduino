@@ -1,0 +1,95 @@
+#include<IRremote.h>
+
+
+int remote = 6;
+IRrecv ir(remote); //ir센서가(출력) 연결된 곳
+int piezo = 13;
+decode_results results;
+long signal;
+
+void setup()
+{
+  ir.enableIRIn(); //적외선센서활성
+  pinMode(2, OUTPUT);
+  pinMode(3, INPUT);
+  pinMode(piezo, OUTPUT);
+  pinMode(remote, INPUT);
+  pinMode(11,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(9,OUTPUT);
+  Serial.begin(4800);
+}
+
+void loop()
+{   
+  if(ir.decode(&results)){ 
+    
+    Serial.println(results.value, HEX);
+    
+    analogWrite(11, 0); //led빨
+     analogWrite(10, 0); //led파
+     analogWrite(9, 0);  //led초
+     analogWrite(13, 0); //피에조
+    signal = results.value;
+    //sensor();
+  }
+   sensor();
+}
+  void sensor(){
+    
+    switch (signal) {
+      case 0xFD30CF:{
+        
+       digitalWrite(2, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(2, LOW);
+  
+        int duration = pulseIn(3, HIGH);
+        int distance = duration / 58.2;
+   		//int hertz = map(duration, 0, 1023, 20, 4000);
+        
+        if (distance < 50) {
+         digitalWrite(11, HIGH);
+          digitalWrite(10, LOW);
+          digitalWrite(9, LOW);
+          delayMicroseconds(2);
+         digitalWrite(piezo, HIGH);
+        } else if (distance < 100) {
+          digitalWrite(10, HIGH);
+          digitalWrite(11, LOW);
+          digitalWrite(9, LOW);
+          delayMicroseconds(2);
+          digitalWrite(piezo, HIGH);
+        } else if (distance < 200) {
+          digitalWrite(9, HIGH);
+              digitalWrite(10, LOW);
+          digitalWrite(11, LOW);
+          delayMicroseconds(2);       
+        }
+
+        else {
+          Serial.println("no sig");
+        }
+        
+         //  delay(500);     
+          //return; //이게 있따면 색이 변하지만 리모콘값 변화x
+          break;
+      }
+      
+      case 0xFD08F7:{
+           Serial.println("1");
+        //  delay(500);
+           break;
+      }
+      default:{
+           Serial.println("another nomber");
+        //  delay(500);
+          break;
+      }
+    }
+    delayMicroseconds(2);
+    ir.resume();
+    delay(1000);
+   //if irdecode 문 
+} //void loop문 닫기
+      
